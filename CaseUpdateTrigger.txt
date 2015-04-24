@@ -1,0 +1,38 @@
+trigger CaseAfterUpdate on Case (after update)
+{
+	// Test Trigger
+        
+    if(CreditDisputeTriggerHandler.isNotCreditDiputeFlow(Trigger.new[0]))
+    {
+    Set<id> masterMilestoneSet = new Set<id>();
+    masterMilestoneSet.clear();
+    List<CaseMilestone> masterUpdateList = new List<CaseMilestone>();
+    masterUpdateList.clear();
+
+    // ******************************************************************************************
+    // *                     Get the recordtype ids for Client Case & CRT.                      *
+    // ******************************************************************************************
+    Id CRTRecordTypeId;        // = [select id from recordtype where name = 'CRT' and SObjectType = 'Case' and isActive = true].id;
+    Id clientCaseRecordTypeId; // = [select id from recordtype where name = 'Client Case' and SObjectType = 'Case' and isActive = true].id;
+    Id mortgageHelpLineId;
+    Id CLEARRecordTypeId;
+    Id execServicesRecordTypeId;
+    Id SocialMediaRecordTypeId;
+    Id ComplianceAndRiskRecordTypeId;
+
+    List<RecordType> selectedRecordTypes = [select id, name
+                                            from RecordType
+                                            where SObjectType = 'Case' and isActive = true and
+                                           (name = 'Client Case' or name = 'CRT' or name = 'CLEAR' or name = 'Executive Services Case' or name='Mortgage Helpline' or name='Social Media Case' or name='Compliance & Risk')];
+
+    for (RecordType rt: selectedRecordTypes)
+    {
+        if (rt.name == 'Client Case') clientCaseRecordTypeId = rt.id;
+        if (rt.name == 'CRT') CRTRecordTypeId = rt.id;
+        if (rt.name == 'Mortgage Helpline') mortgageHelpLineId= rt.id;
+        if (rt.name == 'CLEAR') CLEARRecordTypeId = rt.id; 
+        if (rt.name == 'Executive Services Case') execServicesRecordTypeId = rt.id;  //added for CMI 2014 Release.
+        if (rt.name == 'Social Media Case') SocialMediaRecordTypeId = rt.id;  //added for CMI 2014 Release.
+        if (rt.name== 'Compliance & Risk') ComplianceAndRiskRecordTypeId=rt.id;
+    }
+}

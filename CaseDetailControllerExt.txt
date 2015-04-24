@@ -1,0 +1,82 @@
+public class CaseDetailOverrideExtension
+{
+
+    private final Case record;
+    private Case m_caseDetail;
+    private string m_recordTypeName;   
+
+        
+    //start changes for CMI 2014
+    //variable to store CIN coming in URL.
+    private string CIN;
+    //property store CIN.
+    public String clientCIN
+    {
+        get
+        {
+            return CIN;    
+        }
+    }
+    //variable to store 'archived' parameter coming in URL.
+    private string archived;
+    //property store 'archived' parameter.
+    public String archivedFlow
+    {
+        get
+        {
+            return archived;    
+        }
+    }    
+    //end changes for CMI 2014
+    
+    public CaseDetailOverrideExtension(ApexPages.StandardController caseController)
+    {
+        record = (Case)caseController.getRecord();
+        CIN=ApexPages.currentPage().getParameters().get('cin');
+        archived=ApexPages.currentPage().getParameters().get('archived');
+    }
+    
+    public void Page_Load()
+    {
+        m_caseDetail = [select id, recordtypeid, SLA_Start__c, SLA_End__c, Case_Association_Type__c, parentId, Transferred_Case_Number__c, Type from Case where id = :record.id];
+        // For release 3, removing the criteria isActive=true from the query as MH cases have been made inactive and in order to see the old MH cases this criteria was removed. And also Case Type was retrieved from above query                    
+        m_recordTypeName = [select name from recordtype 
+                            where SObjectType = 'Case' and 
+                            id = :m_caseDetail.recordtypeid].name;
+                                            
+        //Start Changes For CMI 2014 Release 3
+        // If the case has been transferred to CARRT or MERT, the method to populate the case number of the transferred case, is called from the CMI Helper class.
+        if(m_caseDetail.Case_Association_Type__c == 'Transfer To CARRT' || m_caseDetail.Case_Association_Type__c == 'Transfer To ES' )
+        {
+            string caseTransferredTo = 'CARRT';
+            CMIHelper.identifyTransferredCaseNumber(caseTransferredTo,m_caseDetail); 
+        }
+        if(m_caseDetail.Case_Association_Type__c == 'Transfer To MERT' || m_caseDetail.Case_Association_Type__c == 'Transfer To CRT')
+        {
+            string caseTransferredTo = 'MERT';
+            CMIHelper.identifyTransferredCaseNumber(caseTransferredTo,m_caseDetail); 
+        }  
+        //End Changes For CMI 2014 Release 3      
+    }
+    
+    public string RecordTypeName
+    {
+        get{ return m_recordTypeName; }
+    }
+    
+    //Start Changes For CMI 2014 Release 3
+    public string CaseType
+    {
+        get{ return m_caseDetail.Type; }
+    }
+    //End Changes For CMI 2014 Release 3
+    
+    public string TimeRemaining
+    {
+        get
+        {
+            BusinessHours bh = [select id from businesshours where IsDefault=true];
+            return string.valueOf(BusinessHours.diff(bh.id, System.now(), m_caseDetail.SLA_End__c )/60000);
+        }
+    }
+}
