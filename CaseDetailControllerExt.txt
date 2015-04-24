@@ -1,6 +1,8 @@
 public class CaseDetailOverrideExtension
 {
 
+    private contact contactRecord;
+
     private final Case record;
     private Case m_caseDetail;
     private string m_recordTypeName;   
